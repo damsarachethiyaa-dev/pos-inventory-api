@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pos-inventory-postgres
+    environment:
+      POSTGRES_DB: pos_inventory
+      POSTGRES_USER: pos_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-pos_secret}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pos_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pos_user -d pos_inventory"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pos-inventory-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_URL: jdbc:postgresql://postgres:5432/pos_inventory
+      DB_USERNAME: pos_user
+      DB_PASSWORD: ${DB_PASSWORD:-pos_secret}
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-strong-256-bit-production-jwt-secret-key-2026}
+    ports:
+      - "8080:8080"
+
+volumes:
+  pos_pg_data:

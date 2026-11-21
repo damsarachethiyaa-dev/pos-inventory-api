@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: pos-inventory-api
+
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:posdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+app:
+  jwt:
+    # Override in production via JWT_SECRET env var (minimum 256-bit Base64/UTF-8 secret)
+    secret: ${JWT_SECRET:dev-only-change-in-production-pos-inventory-api-jwt-signing-key-256bit}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  tax-rate: ${APP_TAX_RATE:0.08}
+  seed:
+    enabled: ${APP_SEED_ENABLED:true}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: postgres
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/pos_inventory}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:pos_user}
+    password: ${DB_PASSWORD:pos_secret}
